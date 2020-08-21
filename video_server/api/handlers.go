@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/json"
 	"github.com/julienschmidt/httprouter"
-	"golang-streaming/video_server/api/dbops"
-	"golang-streaming/video_server/api/defs"
-	"golang-streaming/video_server/api/session"
-	"golang-streaming/video_server/api/utils"
+	"github.com/alanhou/golang-streaming/video_server/api/dbops"
+	"github.com/alanhou/golang-streaming/video_server/api/defs"
+	"github.com/alanhou/golang-streaming/video_server/api/session"
+	"github.com/alanhou/golang-streaming/video_server/api/utils"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -20,13 +20,14 @@ func CreateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		sendErrorResponse(w, defs.ErrorRequestBodyParseFailed)
 		return
 	}
-
-	if err := dbops.AddUserCredential(ubody.Username, ubody.Pwd); err != nil {
+log.Printf("ubody: %s", ubody)
+	if err := dbops.AddUserCredential(ubody.UserName, ubody.Pwd); err != nil {
+		log.Printf("CreateUser err: %s", err)
 		sendErrorResponse(w, defs.ErrorDBError)
 		return
 	}
 
-	id := session.GenerateNewSessionId(ubody.Username)
+	id := session.GenerateNewSessionId(ubody.UserName)
 	su := &defs.SignedUp{Success: true, SessionId: id}
 
 	if resp, err := json.Marshal(su); err != nil {
@@ -51,21 +52,22 @@ func Login(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// Validate the request body
 	uname := p.ByName("username")
 	log.Printf("Login url name: %s", uname)
-	log.Printf("Login body name: %s", ubody.Username)
-	if uname != ubody.Username {
+	log.Printf("Login body name: %s", ubody.UserName)
+	if uname != ubody.UserName {
 		sendErrorResponse(w, defs.ErrorNotAuthUser)
 		return
 	}
 
-	log.Printf("%s", ubody.Username)
-	pwd, err := dbops.GetUserCredential(ubody.Username)
+	// log.Printf("%s", ubody.UserName)
+	pwd, err := dbops.GetUserCredential(ubody.UserName)
 	log.Printf("Login pwd: %s", pwd)
 	if err != nil || len(pwd) == 0 || pwd != ubody.Pwd {
 		sendErrorResponse(w, defs.ErrorNotAuthUser)
 		return
 	}
 
-	id := session.GenerateNewSessionId(ubody.Username)
+	id := session.GenerateNewSessionId(ubody.UserName)
+	log.Printf("sessionid: %s", id)
 	si := &defs.SignedIn{Success: true, SessionId: id}
 	if resp, err := json.Marshal(si); err != nil {
 		sendErrorResponse(w, defs.ErrorInternalFaults)
@@ -73,12 +75,12 @@ func Login(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		sendNormalResponse(w, string(resp), 200)
 	}
 
-	//io.WriteString(w, "signed in")
+	// io.WriteString(w, "signed in")
 }
 
 func GetUserInfo(w http.ResponseWriter, r *http.Request, p httprouter.Params)  {
 	if !ValidateUser(w, r) {
-		log.Printf("Unauthorized user \n")
+		log.Printf("GetUserInfo:Unauthorized user \n")
 	}
 
 	uname := p.ByName("username")
@@ -100,7 +102,7 @@ func GetUserInfo(w http.ResponseWriter, r *http.Request, p httprouter.Params)  {
 
 func AddNewVideo(w http.ResponseWriter, r *http.Request, p httprouter.Params)  {
 	if !ValidateUser(w, r) {
-		log.Printf("Unauthorized user \n")
+		log.Printf("AddNewVideo: Unauthorized user \n")
 		return
 	}
 
@@ -129,10 +131,13 @@ func AddNewVideo(w http.ResponseWriter, r *http.Request, p httprouter.Params)  {
 
 func ListAllVideos(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	if !ValidateUser(w ,r) {
+		log.Printf("listvideos ValidateUser: %n")
 		return
 	}
 
 	uname := p.ByName("username")
+	log.Printf("listvideos url name: %s", uname)
+
 	vs, err := dbops.ListVideoInfo(uname, 0, utils.GetCurrentTimestampSec())
 	if err != nil {
 		log.Printf("Error in ListAllVideos: %s", err)
@@ -165,7 +170,8 @@ func DeleteVideo(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 }
 
 func PostComment(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	if ValidateUser(w, r) {
+	if !ValidateUser(w, r) {
+		log.Printf("Error in PostComment ValidateUser")
 		return
 	}
 
@@ -177,12 +183,13 @@ func PostComment(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		sendErrorResponse(w, defs.ErrorRequestBodyParseFailed)
 		return
 	}
-
+log.Printf("Error in PostComment")
 	vid := p.ByName("vid-id")
 	if err := dbops.AddNewComments(vid, cbody.AuthorId, cbody.Content); err != nil {
 		log.Printf("Error in PostComment: %s", err)
 		sendErrorResponse(w, defs.ErrorDBError)
 	} else {
+		log.Printf("ok in PostComment")
 		sendNormalResponse(w, "ok", 201)
 	}
 }

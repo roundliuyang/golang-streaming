@@ -15,6 +15,9 @@ func NewWorker(interval time.Duration, r *Runner) *Worker {
 }
 
 func (w *Worker) startWorker() {
+	// for c = range w.ticker.C {
+	// 	这个是错误的写法，误差越来越大
+	// }
 	for {
 		select {
 		case <- w.ticker.C:
@@ -29,4 +32,8 @@ func Start() {
 	r := NewRunner(3,true, VideoClearDispatcher, VideoClearExecutor)
 	w := NewWorker(3, r)
 	go w.startWorker()
+	// something else
+	// r1:=
+	// w1=
+	// go w1.
 }

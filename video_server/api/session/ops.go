@@ -1,11 +1,12 @@
 package session
 
 import (
-	"golang-streaming/video_server/api/dbops"
-	"golang-streaming/video_server/api/defs"
-	"golang-streaming/video_server/api/utils"
+	"github.com/alanhou/golang-streaming/video_server/api/dbops"
+	"github.com/alanhou/golang-streaming/video_server/api/defs"
+	"github.com/alanhou/golang-streaming/video_server/api/utils"
 	"sync"
 	"time"
+	"log"
 )
 
 var sessionMap *sync.Map
@@ -40,11 +41,14 @@ func GenerateNewSessionId(un string) string {
 	id, _ := utils.NewUUID()
 	ct := noInMilli()
 	ttl := ct + 30 * 60 * 1000 // Server side session valid time: 30 min
-
+	log.Printf("ttl: %s", ttl)
 	ss := &defs.SimpleSession{Username: un, TTL: ttl}
 	sessionMap.Store(id, ss)
-	dbops.InsertSession(id, ttl, un)
-
+	err:=dbops.InsertSession(id, ttl, un)
+	if err != nil {
+		log.Printf("err: %s", err)
+		return id
+	}
 	return id
 }
 

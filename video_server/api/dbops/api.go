@@ -1,22 +1,27 @@
 package dbops
 
 import (
-	"golang-streaming/video_server/api/defs"
-	"golang-streaming/video_server/api/utils"
+	"github.com/alanhou/golang-streaming/video_server/api/defs"
+	"github.com/alanhou/golang-streaming/video_server/api/utils"
 	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
+	// _ "github.com/go-sql-driver/mysql"
+	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"time"
 )
 
 func AddUserCredential(loginName string, pwd string) error {
+	log.Printf("loginname: %s", loginName)
+	log.Printf("loginpwd: %s", pwd)
 	 stmtIns, err := dbConn.Prepare("INSERT INTO users (login_name, pwd) VALUES (?, ?)")
 	 if err != nil {
+	 	log.Printf("insert users1: %s", err)
 	 	return err
 	 }
 
 	 _, err = stmtIns.Exec(loginName, pwd)
 	 if err != nil {
+	 	log.Printf("insert users2: %s", err)
 	 	return err
 	 }
 
@@ -151,6 +156,7 @@ func AddNewComments(vid string, aid int, content string) error {
 
 	stmtIns, err := dbConn.Prepare("INSERT INTO comments (id, video_id, author_id, content) VALUES (?, ?, ?, ?)")
 	if err != nil {
+		log.Printf("addcomments:%s", err)
 		return err
 	}
 
@@ -163,15 +169,16 @@ func AddNewComments(vid string, aid int, content string) error {
 	return nil
 }
 
+ // 20200821 AND comments.time > FROM_UNIXTIME(?) AND comments.time <= FROM_UNIXTIME(?)
+		// ORDER BY comments.time DESC
 func ListComments(vid string, from, to int) ([]*defs.Comment, error) {
 	stmtOut, err := dbConn.Prepare(`SELECT comments.id, users.login_name, comments.content FROM comments
 		INNER JOIN users ON comments.author_id = users.id
-		WHERE comments.video_id = ? AND comments.time > FROM_UNIXTIME(?) AND comments.time <= FROM_UNIXTIME(?)
-		ORDER BY comments.time DESC`)
+		WHERE comments.video_id = ?`)
 
 	var res []*defs.Comment
 
-	rows, err := stmtOut.Query(vid, from, to)
+	rows, err := stmtOut.Query(vid)//, from, to
 	if err != nil {
 		return res, err
 	}
@@ -190,17 +197,18 @@ func ListComments(vid string, from, to int) ([]*defs.Comment, error) {
 
 	return res, nil
 }
-
+ // 20200821  AND video_info.create_time > FROM_UNIXTIME(?) AND video_info.create_time<=FROM_UNIXTIME(?)
+		// OREDER BY video_info.create_time DESC
 func ListVideoInfo(uname string, from, to int) ([]*defs.VideoInfo, error) {
 	stmtOut, err:=dbConn.Prepare(`SELECT video_info.id, video_info.author_id, video_info.name, video_info.display_ctime FROM video_info
 		INNER JOIN users ON video_info.author_id = users.id
-		WHERE users.login_name=? AND video_info.create_time > FROM_UNIXTIME(?) AND video_info.create_time<=FROM_UNIXTIME(?)
-		OREDER BY video_info.create_time DESC`)
+		WHERE users.login_name=?`)
 	var res []*defs.VideoInfo
 	if err!=nil{
 		return res, err
 	}
-	rows, err:=stmtOut.Query(uname, from, to)
+	// rows, err:=stmtOut.Query(uname, from, to)
+	rows, err:=stmtOut.Query(uname)
 	if err!=nil {
 		log.Printf("%s", err)
 		return res, err

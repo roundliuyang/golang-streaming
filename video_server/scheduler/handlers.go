@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/julienschmidt/httprouter"
-	"golang-streaming/video_server/scheduler/dbops"
+	"github.com/alanhou/golang-streaming/video_server/scheduler/dbops"
 	"net/http"
 )
 

@@ -1,7 +1,7 @@
 package dbops
 
 import (
-	"golang-streaming/video_server/api/defs"
+	"github.com/alanhou/golang-streaming/video_server/api/defs"
 	"database/sql"
 	"log"
 	"strconv"
@@ -10,13 +10,18 @@ import (
 
 func InsertSession(sid string, ttl int64, uname string) error {
 	ttlstr := strconv.FormatInt(ttl, 10)
-	stmtIns, err := dbConn.Prepare("INSERT INTO sessions (session_id, TTL, login_name) VALUE (?, ?, ?)")
+	stmtIns, err :=dbConn.Prepare("INSERT INTO sessions (session_id,t_t_l,login_name) VALUES (?, ?,?)")
+	// stmtIns, err := dbConn.Prepare("INSERT INTO sessions (session_id, TTL, login_name) VALUE (?, ?, ?)")
 	if err != nil {
+		log.Printf("err1: %s", err)
 		return err
 	}
-
+log.Printf("session_id: %s", sid)
+log.Printf("TTL: %s", ttlstr)
+log.Printf("login_name: %s", uname)
 	_, err = stmtIns.Exec(sid, ttlstr, uname)
 	if err != nil {
+		log.Printf("err2: %s", err)
 		return err
 	}
 
@@ -26,7 +31,7 @@ func InsertSession(sid string, ttl int64, uname string) error {
 
 func RetrieveSession(sid string) (*defs.SimpleSession, error) {
 	ss := &defs.SimpleSession{}
-	stmtOut, err := dbConn.Prepare("SELECT TTL, login_name from sessions WHERE session_id = ?")
+	stmtOut, err := dbConn.Prepare("SELECT t_t_l, login_name from sessions WHERE session_id = ?")
 	if err != nil {
 		return nil, err
 	}

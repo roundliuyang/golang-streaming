@@ -61,6 +61,7 @@ func userHomeHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Param
 	} else if len(fname) != 0 {
 		p = &UserPage{Name: fname}
 	}
+	//p = &UserPage{Name: "fname"}
 
 	t, e := template.ParseFiles("./templates/userhome.html")
 	if e != nil {
