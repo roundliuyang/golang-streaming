@@ -1,11 +1,22 @@
 # Go语言实战流媒体视频网站
 
 D:\gowork\src\github.com\3xxx>go get github.com/3xxx/golang-streaming
-修复了几个bug：
-1. sessions (session_id,TTL,login_name)————TTL改成t_t_l
+
+## 本次修复了几个bug：
+
+1. sessions (session_id,TTL,login_name)————TTL应该要改成t_t_l
+
 1. 改成了sqlite3
-1. PostComment……if !ValidateUser————加了一个!号
-1. home.js————function selectVideo(vid) { var url = 'http://' + window.location.hostname + ':9000/videos/'+ vid————8000改成9000
+1. PostComment……if ValidateUser————ValidateUser前应该要加一个!号
+1. home.js————function selectVideo(vid) { var url = 'http://' + window.location.hostname + ':8000/videos/'+ vid————8000应该要改成9000
+
+## 注意：
+
+1. 自己要手动建表。
+
+1. 此为静态mp4，如果是直播请用https://github.com/gwuhaolin/livego或https://github.com/nareix/joy5
+
+1. chrome浏览器对有些MP4格式不显示视频，请百度后进行格式转换。
 
 学习笔记链接：https://alanhou.org/golang-video-streaming/
 
