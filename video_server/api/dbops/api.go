@@ -1,11 +1,10 @@
 package dbops
 
 import (
+	"database/sql"
 	"github.com/alanhou/golang-streaming/video_server/api/defs"
 	"github.com/alanhou/golang-streaming/video_server/api/utils"
-	"database/sql"
-	// _ "github.com/go-sql-driver/mysql"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"time"
 )
@@ -13,23 +12,23 @@ import (
 func AddUserCredential(loginName string, pwd string) error {
 	log.Printf("loginname: %s", loginName)
 	log.Printf("loginpwd: %s", pwd)
-	 stmtIns, err := dbConn.Prepare("INSERT INTO users (login_name, pwd) VALUES (?, ?)")
-	 if err != nil {
-	 	log.Printf("insert users1: %s", err)
-	 	return err
-	 }
+	stmtIns, err := dbConn.Prepare("INSERT INTO users (login_name, pwd) VALUES (?, ?)")
+	if err != nil {
+		log.Printf("insert users1: %s", err)
+		return err
+	}
 
-	 _, err = stmtIns.Exec(loginName, pwd)
-	 if err != nil {
-	 	log.Printf("insert users2: %s", err)
-	 	return err
-	 }
+	_, err = stmtIns.Exec(loginName, pwd)
+	if err != nil {
+		log.Printf("insert users2: %s", err)
+		return err
+	}
 
-	 stmtIns.Close()
-	 return nil
+	stmtIns.Close()
+	return nil
 }
 
-func GetUserCredential(loginName string) (string, error)  {
+func GetUserCredential(loginName string) (string, error) {
 	stmtOut, err := dbConn.Prepare("SELECT pwd FROM users WHERE login_name = ?")
 	if err != nil {
 		log.Printf("%s", err)
@@ -64,21 +63,21 @@ func DeleteUser(loginName string, pwd string) error {
 }
 
 func GetUser(loginName string) (*defs.User, error) {
-	stmtOut, err:=dbConn.Prepare("SELECT id, pwd FROM users WHERE login_name=?")
-	if err!=nil {
+	stmtOut, err := dbConn.Prepare("SELECT id, pwd FROM users WHERE login_name=?")
+	if err != nil {
 		log.Printf("%s", err)
 		return nil, err
 	}
 	var id int
 	var pwd string
-	err=stmtOut.QueryRow(loginName).Scan(&id, &pwd)
-	if err!= nil && err!=sql.ErrNoRows {
+	err = stmtOut.QueryRow(loginName).Scan(&id, &pwd)
+	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
-	if err==sql.ErrNoRows {
+	if err == sql.ErrNoRows {
 		return nil, nil
 	}
-	res:=&defs.User{Id: id, LoginName: loginName, Pwd: pwd}
+	res := &defs.User{Id: id, LoginName: loginName, Pwd: pwd}
 	defer stmtOut.Close()
 	return res, nil
 }
@@ -103,7 +102,7 @@ func AddNewVideo(aid int, name string) (*defs.VideoInfo, error) {
 		return nil, err
 	}
 
-	res := &defs.VideoInfo{Id: vid, AuthorId: aid, Name: name, DisplayCtime:ctime}
+	res := &defs.VideoInfo{Id: vid, AuthorId: aid, Name: name, DisplayCtime: ctime}
 
 	defer stmtIns.Close()
 	return res, nil
@@ -169,8 +168,8 @@ func AddNewComments(vid string, aid int, content string) error {
 	return nil
 }
 
- // 20200821 AND comments.time > FROM_UNIXTIME(?) AND comments.time <= FROM_UNIXTIME(?)
-		// ORDER BY comments.time DESC
+// 20200821 AND comments.time > FROM_UNIXTIME(?) AND comments.time <= FROM_UNIXTIME(?)
+// ORDER BY comments.time DESC
 func ListComments(vid string, from, to int) ([]*defs.Comment, error) {
 	stmtOut, err := dbConn.Prepare(`SELECT comments.id, users.login_name, comments.content FROM comments
 		INNER JOIN users ON comments.author_id = users.id
@@ -178,7 +177,7 @@ func ListComments(vid string, from, to int) ([]*defs.Comment, error) {
 
 	var res []*defs.Comment
 
-	rows, err := stmtOut.Query(vid)//, from, to
+	rows, err := stmtOut.Query(vid) //, from, to
 	if err != nil {
 		return res, err
 	}
@@ -197,19 +196,20 @@ func ListComments(vid string, from, to int) ([]*defs.Comment, error) {
 
 	return res, nil
 }
- // 20200821  AND video_info.create_time > FROM_UNIXTIME(?) AND video_info.create_time<=FROM_UNIXTIME(?)
-		// OREDER BY video_info.create_time DESC
+
+// 20200821  AND video_info.create_time > FROM_UNIXTIME(?) AND video_info.create_time<=FROM_UNIXTIME(?)
+// OREDER BY video_info.create_time DESC
 func ListVideoInfo(uname string, from, to int) ([]*defs.VideoInfo, error) {
-	stmtOut, err:=dbConn.Prepare(`SELECT video_info.id, video_info.author_id, video_info.name, video_info.display_ctime FROM video_info
+	stmtOut, err := dbConn.Prepare(`SELECT video_info.id, video_info.author_id, video_info.name, video_info.display_ctime FROM video_info
 		INNER JOIN users ON video_info.author_id = users.id
 		WHERE users.login_name=?`)
 	var res []*defs.VideoInfo
-	if err!=nil{
+	if err != nil {
 		return res, err
 	}
 	// rows, err:=stmtOut.Query(uname, from, to)
-	rows, err:=stmtOut.Query(uname)
-	if err!=nil {
+	rows, err := stmtOut.Query(uname)
+	if err != nil {
 		log.Printf("%s", err)
 		return res, err
 	}
@@ -217,10 +217,10 @@ func ListVideoInfo(uname string, from, to int) ([]*defs.VideoInfo, error) {
 	for rows.Next() {
 		var id, name, ctime string
 		var aid int
-		if err:=rows.Scan(&id, &aid, &name, &ctime); err!=nil{
+		if err := rows.Scan(&id, &aid, &name, &ctime); err != nil {
 			return res, err
 		}
-		vi:=&defs.VideoInfo{Id:id, AuthorId:aid, Name:name, DisplayCtime: ctime}
+		vi := &defs.VideoInfo{Id: id, AuthorId: aid, Name: name, DisplayCtime: ctime}
 		res = append(res, vi)
 	}
 	defer stmtOut.Close()

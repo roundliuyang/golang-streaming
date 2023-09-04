@@ -4,19 +4,19 @@ import (
 	"github.com/alanhou/golang-streaming/video_server/api/dbops"
 	"github.com/alanhou/golang-streaming/video_server/api/defs"
 	"github.com/alanhou/golang-streaming/video_server/api/utils"
+	"log"
 	"sync"
 	"time"
-	"log"
 )
 
 var sessionMap *sync.Map
 
-func init()  {
+func init() {
 	sessionMap = &sync.Map{}
 }
 
-func noInMilli() int64  {
-	return time.Now().UnixNano()/1000000
+func noInMilli() int64 {
+	return time.Now().UnixNano() / 1000000
 }
 
 func deleteExpiredSession(sid string) {
@@ -40,11 +40,11 @@ func LoadSessionsFromDB() {
 func GenerateNewSessionId(un string) string {
 	id, _ := utils.NewUUID()
 	ct := noInMilli()
-	ttl := ct + 30 * 60 * 1000 // Server side session valid time: 30 min
+	ttl := ct + 30*60*1000 // Server side session valid time: 30 min
 	log.Printf("ttl: %s", ttl)
 	ss := &defs.SimpleSession{Username: un, TTL: ttl}
 	sessionMap.Store(id, ss)
-	err:=dbops.InsertSession(id, ttl, un)
+	err := dbops.InsertSession(id, ttl, un)
 	if err != nil {
 		log.Printf("err: %s", err)
 		return id

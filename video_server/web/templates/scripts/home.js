@@ -306,7 +306,7 @@ function htmlVideoListElement(vid, name, ctime) {
         $('<video/>', {
             width:'320',
             height:'240',
-            poster:'/statics/img/preloader.png',//20200821
+            poster:'/statics/img/preloader.jpg',//20200821
             controls: true
             //href: '#'
         })
