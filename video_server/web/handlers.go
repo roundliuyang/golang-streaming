@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/alanhou/golang-streaming/video_server/web/config"
 	"github.com/julienschmidt/httprouter"
 	"html/template"
 	"io"
@@ -11,7 +12,6 @@ import (
 	"net/http/httputil"
 	"net/url"
 )
-
 
 type HomePage struct {
 	Name string
@@ -43,7 +43,6 @@ func homeHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 }
 
-
 func userHomeHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cname, err1 := r.Cookie("username")
 	_, err2 := r.Cookie("session")
@@ -56,7 +55,7 @@ func userHomeHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Param
 	fname := r.FormValue("username")
 
 	var p *UserPage
-	if len(cname.Value) !=0 {
+	if len(cname.Value) != 0 {
 		p = &UserPage{Name: cname.Value}
 	} else if len(fname) != 0 {
 		p = &UserPage{Name: fname}
@@ -72,7 +71,7 @@ func userHomeHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Param
 	t.Execute(w, p)
 }
 
-func apiHandler(w http.ResponseWriter,  r *http.Request, ps httprouter.Params) {
+func apiHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if r.Method != http.MethodPost {
 		re, _ := json.Marshal(ErrorRequestNotRecognized)
 		io.WriteString(w, string(re))
@@ -91,7 +90,13 @@ func apiHandler(w http.ResponseWriter,  r *http.Request, ps httprouter.Params) {
 	defer r.Body.Close()
 }
 
-func proxyHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func proxyVideoHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	u, _ := url.Parse("http://" + config.GetLbAddr() + ":9000/")
+	proxy := httputil.NewSingleHostReverseProxy(u)
+	proxy.ServeHTTP(w, r)
+}
+
+func proxyUploadHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	u, _ := url.Parse("http://127.0.0.1:9000/")
 	proxy := httputil.NewSingleHostReverseProxy(u)
 	proxy.ServeHTTP(w, r)

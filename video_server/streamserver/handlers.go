@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 )
 
 func testPageHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -18,20 +17,9 @@ func testPageHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params
 }
 
 func streamHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	vid := p.ByName("vid-id")
-	vl := VIDEO_DIR + vid
-
-	video, err := os.Open(vl)
-	if err != nil {
-		log.Printf("Error when try to open file: %v", err)
-		sendErrorResponse(w, http.StatusInternalServerError, "Internal Error")
-		return
-	}
-
-	w.Header().Set("Content-Type", "video/mp4")
-	http.ServeContent(w, r, "", time.Now(), video)
-
-	defer video.Close()
+	log.Println("Entered the streamHandler")
+	targetUrl := "https://liuyang-oss.oss-cn-beijing.aliyuncs.com/videos/" + p.ByName("vid-id")
+	http.Redirect(w, r, targetUrl, 301)
 }
 
 func uploadHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -60,7 +48,15 @@ func uploadHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 		sendErrorResponse(w, http.StatusInternalServerError, "Internal Error")
 		return
 	}
-
+	ossfn := "videos/" + fn
+	path := "./videos/" + fn
+	bn := "liuyang-oss"
+	ret := UploadToOss(ossfn, path, bn)
+	if !ret {
+		sendErrorResponse(w, http.StatusInternalServerError, "Internal Error")
+		return
+	}
+	os.Remove(path)
 	w.WriteHeader(http.StatusCreated)
 	io.WriteString(w, "Upload successfully")
 }
