@@ -13,7 +13,7 @@ type Configuration struct {
 var configuration *Configuration
 
 func init() {
-	file, _ := os.Open("./conf.json")
+	file, _ := os.Open("D:\\xm\\golang-streaming\\video_server\\conf.json")
 	defer file.Close()
 	decoder := json.NewDecoder(file)
 	configuration = &Configuration{}

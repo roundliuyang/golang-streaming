@@ -2,11 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/julienschmidt/httprouter"
 	"github.com/alanhou/golang-streaming/video_server/api/dbops"
 	"github.com/alanhou/golang-streaming/video_server/api/defs"
 	"github.com/alanhou/golang-streaming/video_server/api/session"
 	"github.com/alanhou/golang-streaming/video_server/api/utils"
+	"github.com/julienschmidt/httprouter"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -20,7 +20,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		sendErrorResponse(w, defs.ErrorRequestBodyParseFailed)
 		return
 	}
-log.Printf("ubody: %s", ubody)
+	log.Printf("ubody: %s", ubody)
 	if err := dbops.AddUserCredential(ubody.UserName, ubody.Pwd); err != nil {
 		log.Printf("CreateUser err: %s", err)
 		sendErrorResponse(w, defs.ErrorDBError)
@@ -78,7 +78,7 @@ func Login(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// io.WriteString(w, "signed in")
 }
 
-func GetUserInfo(w http.ResponseWriter, r *http.Request, p httprouter.Params)  {
+func GetUserInfo(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	if !ValidateUser(w, r) {
 		log.Printf("GetUserInfo:Unauthorized user \n")
 	}
@@ -100,7 +100,7 @@ func GetUserInfo(w http.ResponseWriter, r *http.Request, p httprouter.Params)  {
 
 }
 
-func AddNewVideo(w http.ResponseWriter, r *http.Request, p httprouter.Params)  {
+func AddNewVideo(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	if !ValidateUser(w, r) {
 		log.Printf("AddNewVideo: Unauthorized user \n")
 		return
@@ -130,7 +130,7 @@ func AddNewVideo(w http.ResponseWriter, r *http.Request, p httprouter.Params)  {
 }
 
 func ListAllVideos(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	if !ValidateUser(w ,r) {
+	if !ValidateUser(w, r) {
 		log.Printf("listvideos ValidateUser: %n")
 		return
 	}
@@ -154,7 +154,7 @@ func ListAllVideos(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 }
 
 func DeleteVideo(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	if !ValidateUser(w ,r) {
+	if !ValidateUser(w, r) {
 		return
 	}
 
@@ -166,6 +166,7 @@ func DeleteVideo(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		return
 	}
 
+	go utils.SendDeleteVideoRequest(vid)
 	sendNormalResponse(w, "", 204)
 }
 
@@ -183,7 +184,7 @@ func PostComment(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		sendErrorResponse(w, defs.ErrorRequestBodyParseFailed)
 		return
 	}
-log.Printf("Error in PostComment")
+	log.Printf("Error in PostComment")
 	vid := p.ByName("vid-id")
 	if err := dbops.AddNewComments(vid, cbody.AuthorId, cbody.Content); err != nil {
 		log.Printf("Error in PostComment: %s", err)

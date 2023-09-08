@@ -3,8 +3,8 @@ package taskrunner
 import (
 	"errors"
 	"github.com/alanhou/golang-streaming/video_server/scheduler/dbops"
+	"github.com/alanhou/golang-streaming/video_server/scheduler/ossops"
 	"log"
-	"os"
 	"sync"
 )
 
@@ -27,11 +27,13 @@ func VideoClearDispatcher(dc dataChan) error {
 }
 
 func deleteVideo(vid string) error {
-	err := os.Remove(VIDEO_PATH + vid)
 
-	if err != nil && !os.IsNotExist(err) {
-		log.Printf("Deleting video error: %v", err)
-		return err
+	ossfn := "videos/" + vid
+	bn := "liuyang-oss"
+	ok := ossops.DeleteObject(ossfn, bn)
+	if !ok {
+		log.Printf("Deleting video error, oss operation failed")
+		return errors.New("deleting video error")
 	}
 
 	return nil
@@ -41,24 +43,24 @@ func VideoClearExecutor(dc dataChan) error {
 	errMap := &sync.Map{}
 	var err error
 
-	forloop:
-		for {
-			select {
-				case vid := <- dc:
-					go func(id interface{}) {
-						if err := deleteVideo(id.(string)); err != nil {
-							errMap.Store(id, err)
-							return
-						}
-						if err := dbops.DelVideoDeletionRecord(id.(string)); err != nil {
-							errMap.Store(id, err)
-							return
-						}
-					}(vid)
-			default:
-				break forloop
-			}
+forloop:
+	for {
+		select {
+		case vid := <-dc:
+			go func(id interface{}) {
+				if err := deleteVideo(id.(string)); err != nil {
+					errMap.Store(id, err)
+					return
+				}
+				if err := dbops.DelVideoDeletionRecord(id.(string)); err != nil {
+					errMap.Store(id, err)
+					return
+				}
+			}(vid)
+		default:
+			break forloop
 		}
+	}
 
 	errMap.Range(func(k, v interface{}) bool {
 		err = v.(error)
