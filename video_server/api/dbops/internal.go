@@ -10,8 +10,8 @@ import (
 
 func InsertSession(sid string, ttl int64, uname string) error {
 	ttlstr := strconv.FormatInt(ttl, 10)
-	stmtIns, err := dbConn.Prepare("INSERT INTO sessions (session_id,t_t_l,login_name) VALUES (?, ?,?)")
-	// stmtIns, err := dbConn.Prepare("INSERT INTO sessions (session_id, TTL, login_name) VALUE (?, ?, ?)")
+	//stmtIns, err := dbConn.Prepare("INSERT INTO sessions (session_id,t_t_l,login_name) VALUES (?, ?,?)")
+	stmtIns, err := dbConn.Prepare("INSERT INTO sessions (session_id, TTL, login_name) VALUE (?, ?, ?)")
 	if err != nil {
 		log.Printf("err1: %s", err)
 		return err
@@ -31,7 +31,7 @@ func InsertSession(sid string, ttl int64, uname string) error {
 
 func RetrieveSession(sid string) (*defs.SimpleSession, error) {
 	ss := &defs.SimpleSession{}
-	stmtOut, err := dbConn.Prepare("SELECT t_t_l, login_name from sessions WHERE session_id = ?")
+	stmtOut, err := dbConn.Prepare("SELECT TTL, login_name from sessions WHERE session_id = ?")
 	if err != nil {
 		return nil, err
 	}

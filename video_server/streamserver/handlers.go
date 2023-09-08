@@ -49,7 +49,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 		return
 	}
 	ossfn := "videos/" + fn
-	path := "./videos/" + fn
+	path := VIDEO_DIR + fn
 	bn := "liuyang-oss"
 	ret := UploadToOss(ossfn, path, bn)
 	if !ret {
